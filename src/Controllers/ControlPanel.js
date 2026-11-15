@@ -3,6 +3,7 @@ const Modes = require("./ControlModes");
 const StatsPanel = require("../Stats/StatsPanel");
 const WorldConfig = require("../WorldConfig");
 const LoadController = require("./LoadController");
+const ExperimentLab = require("./ExperimentLab");
 
 class ControlPanel {
     constructor(engine) {
@@ -21,6 +22,7 @@ class ControlPanel {
         this.env_controller.setControlPanel(this);
         this.editor_controller.setControlPanel(this);
         this.stats_panel = new StatsPanel(this.engine.env);
+        this.experiment_lab = new ExperimentLab(this);
         this.headless_opacity = 1;
         this.opacity_change_rate = -0.8;
         this.paused=false;
@@ -525,6 +527,7 @@ class ControlPanel {
         $('#fps-actual').text("Actual FPS: " + Math.floor(this.engine.actual_fps));
         $('#reset-count').text("Auto reset count: " + this.engine.env.reset_count);
         this.stats_panel.updateDetails();
+        this.experiment_lab.update();
         if (WorldConfig.headless)
             this.updateHeadlessIcon(delta_time);
 
