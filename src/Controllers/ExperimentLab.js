@@ -68,6 +68,8 @@ class ExperimentLab {
         this.duration = Math.max(100, Math.floor(Number($("#experiment-duration").val()) || 5000));
         this.seed = (Math.floor(Number($("#experiment-seed").val()) || 2026) >>> 0);
         this.originalRandom = Math.random;
+        this.seed = (Math.floor(Number($("#experiment-seed").val()) || 2026) >>> 0);
+        this.originalRandom = Math.random;
         this.results = [];
         this.trialIndex = 0;
         this.previousWorldRules = {
@@ -104,6 +106,7 @@ class ExperimentLab {
     runCondition(index) {
         this.trialIndex = index;
         this.controlPanel.setPaused(true);
+        Math.random = this.createRandom(this.seed);
         // Reset the random stream to the same seed for both conditions.
         Math.random = this.createRandom(this.seed);
         this.env.loadRaw(JSON.parse(JSON.stringify(this.baseline)));
@@ -149,6 +152,24 @@ class ExperimentLab {
         };
     }
 
+    createRandom(seed) {
+        let state = seed >>> 0;
+        return function() {
+            state += 0x6D2B79F5;
+            let value = state;
+            value = Math.imul(value ^ (value >>> 15), value | 1);
+            value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+            return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+        };
+    }
+
+    restoreRandom() {
+        if (this.originalRandom) {
+            Math.random = this.originalRandom;
+            this.originalRandom = null;
+        }
+    }
+
     completeCondition() {
         this.controlPanel.setPaused(true);
         this.results.push(this.collectResult());
@@ -161,6 +182,7 @@ class ExperimentLab {
 
     finishComparison() {
         this.active = false;
+        this.restoreRandom();
         this.restoreRandom();
         WorldConfig.auto_reset = this.previousWorldRules.auto_reset;
         WorldConfig.auto_pause = this.previousWorldRules.auto_pause;
@@ -176,6 +198,7 @@ class ExperimentLab {
         if (!this.active) return;
         this.controlPanel.setPaused(true);
         this.active = false;
+        this.restoreRandom();
         this.restoreRandom();
         WorldConfig.auto_reset = this.previousWorldRules.auto_reset;
         WorldConfig.auto_pause = this.previousWorldRules.auto_pause;
