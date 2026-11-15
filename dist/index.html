@@ -271,7 +271,7 @@
 				<div id='experiments' class='tab'>
 					<div class='experiment-intro'>
 						<h2>Controlled Experiments</h2>
-						<p>Compare two sets of conditions using the same captured ecosystem. Each trial starts from the same organisms and world layout, runs for the same number of ticks, and uses the same random seed.</p>
+						<p>Compare two sets of conditions using the same captured ecosystem. Each trial starts from the same organisms and world layout, runs for the same number of ticks, and uses a matched random seed for each repeat. For a cleaner experiment, change one variable at a time.</p>
 					</div>
 					<div class='experiment-baseline'>
 						<div>
@@ -282,7 +282,9 @@
 					</div>
 					<div class='experiment-duration'>
 						<label for='experiment-duration'>Trial length (simulation ticks)</label>
-						<input id='experiment-duration' type='number' min='100' max='1000000' step='100' value='5000'>
+						<input id='experiment-duration' type='number' min='100' max='1000000' step='100' value='1000'>
+						<label for='experiment-repeats'>Paired repeats</label>
+						<input id='experiment-repeats' type='number' min='1' max='20' step='1' value='3'>
 						<label for='experiment-seed'>Random seed</label>
 						<input id='experiment-seed' type='number' min='0' max='4294967295' step='1' value='2026'>
 					</div>
