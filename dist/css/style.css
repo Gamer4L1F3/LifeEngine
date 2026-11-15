@@ -379,3 +379,127 @@ input:hover,input:active {
 #load-panel-title * {
     display: inline;
 }
+
+
+/* Controlled Experiments — compact research workbench */
+.tab#experiments {
+    display: none;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 12px;
+    padding: 15px;
+    color: #26372f;
+}
+#experiments h2, #experiments h3 { color: #294638; }
+#experiments h2 { margin: 0 0 5px; font-size: 18px; }
+#experiments h3 { margin: 0 0 5px; font-size: 14px; }
+#experiments p { color: #596a60; }
+.experiment-intro { max-width: 850px; }
+.experiment-baseline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #c4cbbb;
+    border-left: 3px solid #607a5b;
+    border-radius: 4px;
+    background: #e8eadf;
+}
+.experiment-baseline p { margin: 3px 0 0; }
+.experiment-duration {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+}
+.experiment-duration label,
+.experiment-condition label {
+    color: #465a4f;
+    font-size: 11px;
+    font-weight: 600;
+}
+.experiment-duration input { width: 115px; }
+.experiment-conditions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.experiment-condition {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 105px;
+    align-items: center;
+    gap: 7px 12px;
+    padding: 13px;
+    border: 1px solid #c5cbbd;
+    border-radius: 4px;
+    background: #f8f7f0;
+}
+.experiment-condition h3,
+.experiment-condition .experiment-caption {
+    grid-column: 1 / -1;
+}
+.experiment-caption {
+    margin: -4px 0 5px;
+    font-size: 10px !important;
+}
+.experiment-condition input {
+    width: 100%;
+    max-width: none !important;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.experiment-marker {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    margin-right: 5px;
+    border-radius: 2px;
+    color: #f3f3e9;
+    background: #4c6654;
+    font-size: 11px;
+}
+.experiment-marker.treatment { background: #a65f43; }
+.experiment-actions { display: flex; flex-wrap: wrap; gap: 5px; }
+#experiment-run {
+    color: #f5f3e9;
+    border-color: #385541;
+    background: #3e624b;
+}
+#experiment-run:hover { background: #52775d; }
+#experiment-run:disabled, #experiment-cancel:disabled { opacity: .45; cursor: not-allowed; }
+#experiment-status {
+    min-height: 18px;
+    margin: 0;
+    padding: 8px 10px;
+    border-left: 2px solid #82936d;
+    background: #e8eadf;
+    font-size: 11px;
+}
+#experiment-results { overflow-x: auto; }
+.experiment-result-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #30443a;
+    background: #f8f7f0;
+    font-size: 11px;
+}
+.experiment-result-table th,
+.experiment-result-table td {
+    padding: 9px 10px;
+    border: 1px solid #c8cebf;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.experiment-result-table thead th {
+    color: #f0f1e8;
+    background: #3d5948;
+}
+.experiment-result-table th:first-child { text-align: left; }
+.experiment-result-table tbody th { font-weight: 600; }
+@media (max-width: 720px) {
+    .experiment-conditions { grid-template-columns: 1fr; }
+    .experiment-baseline { align-items: flex-start; flex-direction: column; }
+}
