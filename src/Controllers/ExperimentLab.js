@@ -109,7 +109,8 @@ class ExperimentLab {
         // Both trials restart the random stream from the same seed.
         Math.random = this.createRandom(this.seed);
         this.env.loadRaw(JSON.parse(JSON.stringify(this.baseline)));
-        Hyperparams.loadJsonObj(Object.assign({}, this.baseline.controls, this.conditions[index]));
+        const { label, ...settings } = this.conditions[index];
+        Hyperparams.loadJsonObj(Object.assign({}, this.baseline.controls, settings));
         this.controlPanel.updateHyperparamUIValues();
         this.controlPanel.stats_panel.reset();
 
@@ -189,6 +190,7 @@ class ExperimentLab {
         if (!this.baseline || this.active) return;
         this.controlPanel.setPaused(true);
         this.env.loadRaw(JSON.parse(JSON.stringify(this.baseline)));
+        Hyperparams.loadJsonObj(this.baseline.controls);
         this.controlPanel.updateHyperparamUIValues();
         this.controlPanel.stats_panel.reset();
         $("#experiment-status").text("Starting ecosystem restored.");
