@@ -46,7 +46,7 @@ class ExperimentLab {
         };
         return {
             label,
-            // WorldEnvironment expects a 0–1 probability, while the UI shows percent.
+            // The simulation stores automatic food drop probability as 0–1.
             foodDropProb: Math.max(0, Math.min(100, number("food-drop"))) / 100,
             foodProdProb: Math.max(0, Math.min(100, number("food-production"))),
             globalMutability: Math.max(0, Math.min(100, number("mutation"))),
@@ -61,14 +61,14 @@ class ExperimentLab {
             return;
         }
         if (this.active) return;
+
         this.conditions = [
             this.readCondition("experiment-a", "Condition A"),
             this.readCondition("experiment-b", "Condition B")
         ];
         this.duration = Math.max(100, Math.floor(Number($("#experiment-duration").val()) || 5000));
-        this.seed = (Math.floor(Number($("#experiment-seed").val()) || 2026) >>> 0);
-        this.originalRandom = Math.random;
-        this.seed = (Math.floor(Number($("#experiment-seed").val()) || 2026) >>> 0);
+        const seedValue = Number($("#experiment-seed").val());
+        this.seed = Number.isFinite(seedValue) ? (Math.floor(seedValue) >>> 0) : 2026;
         this.originalRandom = Math.random;
         this.results = [];
         this.trialIndex = 0;
@@ -106,8 +106,7 @@ class ExperimentLab {
     runCondition(index) {
         this.trialIndex = index;
         this.controlPanel.setPaused(true);
-        Math.random = this.createRandom(this.seed);
-        // Reset the random stream to the same seed for both conditions.
+        // Both trials restart the random stream from the same seed.
         Math.random = this.createRandom(this.seed);
         this.env.loadRaw(JSON.parse(JSON.stringify(this.baseline)));
         Hyperparams.loadJsonObj(Object.assign({}, this.baseline.controls, this.conditions[index]));
@@ -142,7 +141,6 @@ class ExperimentLab {
         const totalCells = this.env.organisms.reduce((sum, org) =>
             sum + (org.anatomy && org.anatomy.cells ? org.anatomy.cells.length : 0), 0);
         return {
-            label: this.conditions[this.trialIndex].label,
             population,
             populationChange: population - this.startPopulation,
             species: FossilRecord.numExtantSpecies(),
@@ -150,24 +148,6 @@ class ExperimentLab {
             largestOrganism: this.env.largest_cell_count,
             mutationRate: this.env.averageMutability()
         };
-    }
-
-    createRandom(seed) {
-        let state = seed >>> 0;
-        return function() {
-            state += 0x6D2B79F5;
-            let value = state;
-            value = Math.imul(value ^ (value >>> 15), value | 1);
-            value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-            return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-        };
-    }
-
-    restoreRandom() {
-        if (this.originalRandom) {
-            Math.random = this.originalRandom;
-            this.originalRandom = null;
-        }
     }
 
     completeCondition() {
@@ -183,11 +163,10 @@ class ExperimentLab {
     finishComparison() {
         this.active = false;
         this.restoreRandom();
-        this.restoreRandom();
         WorldConfig.auto_reset = this.previousWorldRules.auto_reset;
         WorldConfig.auto_pause = this.previousWorldRules.auto_pause;
         $("#experiment-status").text(
-            "Comparison complete · same starting world, tick duration, and random seed (" + this.seed + ")."
+            "Comparison complete · same starting world, duration, and random seed (" + this.seed + ")."
         );
         $("#experiment-run").prop("disabled", false);
         $("#experiment-cancel").prop("disabled", true);
@@ -198,7 +177,6 @@ class ExperimentLab {
         if (!this.active) return;
         this.controlPanel.setPaused(true);
         this.active = false;
-        this.restoreRandom();
         this.restoreRandom();
         WorldConfig.auto_reset = this.previousWorldRules.auto_reset;
         WorldConfig.auto_pause = this.previousWorldRules.auto_pause;
