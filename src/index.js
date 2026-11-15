@@ -1,7 +1,6 @@
 'use strict';
 
 import Engine from './Engine';
-const NaturalOrganismDesignerUI = require('./Controllers/NaturalOrganismDesignerUI');
 
 $('document').ready(function(){
     let isMobile = mobileCheck();
@@ -9,7 +8,6 @@ $('document').ready(function(){
         alert("Welcome to the Life Engine! Be aware the website is not built for mobile, so try on desktop for the best experience!");
     }
     var engine = new Engine();
-    NaturalOrganismDesignerUI.mount();
     engine.start(60);
 });
 
