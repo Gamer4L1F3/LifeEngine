@@ -45,6 +45,7 @@
 					<p class='tabnav-item' id='editor'>Editor</p>
 					<p class='tabnav-item' id='world-controls'>World Controls</p>
 					<p class='tabnav-item' id='hyperparameters'>Evolution Controls</p>
+					<p class='tabnav-item' id='experiments'>Experiments</p>
 					<p class='tabnav-item' id='stats'>Statistics</p>
 					<button id="minimize" title="Minimze Control Panel."><i class="fa fa-minus-square"></i></button>
 				</div>
@@ -266,6 +267,56 @@
 						<a id="download-el" style="display: none;"></a>
 						<input id="upload-hyperparams" style="display: none;" type="file">
 					</div>
+				</div>
+				<div id='experiments' class='tab'>
+					<div class='experiment-intro'>
+						<h2>Controlled Experiments</h2>
+						<p>Compare two sets of conditions using the same captured ecosystem. Each trial starts from the same organisms, world layout, and tick count.</p>
+					</div>
+					<div class='experiment-baseline'>
+						<div>
+							<h3>Starting ecosystem</h3>
+							<p id='experiment-baseline-status'>No starting ecosystem captured yet.</p>
+						</div>
+						<button id='experiment-capture'>Capture current world</button>
+					</div>
+					<div class='experiment-duration'>
+						<label for='experiment-duration'>Trial length (simulation ticks)</label>
+						<input id='experiment-duration' type='number' min='100' max='1000000' step='100' value='5000'>
+					</div>
+					<div class='experiment-conditions'>
+						<section class='experiment-condition'>
+							<h3><span class='experiment-marker'>A</span> Condition A</h3>
+							<p class='experiment-caption'>Control group / reference settings</p>
+							<label for='experiment-a-food-drop'>Automatic food supply (%)</label>
+							<input id='experiment-a-food-drop' type='number' min='0' max='100' step='0.5' value='0'>
+							<label for='experiment-a-food-production'>Producer food chance (%)</label>
+							<input id='experiment-a-food-production' type='number' min='0' max='100' step='0.5' value='5'>
+							<label for='experiment-a-mutation'>Mutation rate (%)</label>
+							<input id='experiment-a-mutation' type='number' min='0' max='100' step='0.5' value='5'>
+							<label for='experiment-a-lifespan'>Lifespan multiplier</label>
+							<input id='experiment-a-lifespan' type='number' min='1' max='10000' step='1' value='100'>
+						</section>
+						<section class='experiment-condition'>
+							<h3><span class='experiment-marker treatment'>B</span> Condition B</h3>
+							<p class='experiment-caption'>Experimental group / changed settings</p>
+							<label for='experiment-b-food-drop'>Automatic food supply (%)</label>
+							<input id='experiment-b-food-drop' type='number' min='0' max='100' step='0.5' value='5'>
+							<label for='experiment-b-food-production'>Producer food chance (%)</label>
+							<input id='experiment-b-food-production' type='number' min='0' max='100' step='0.5' value='5'>
+							<label for='experiment-b-mutation'>Mutation rate (%)</label>
+							<input id='experiment-b-mutation' type='number' min='0' max='100' step='0.5' value='5'>
+							<label for='experiment-b-lifespan'>Lifespan multiplier</label>
+							<input id='experiment-b-lifespan' type='number' min='1' max='10000' step='1' value='100'>
+						</section>
+					</div>
+					<div class='experiment-actions'>
+						<button id='experiment-run' disabled>Run A/B comparison</button>
+						<button id='experiment-cancel' disabled>Stop</button>
+						<button id='experiment-restore'>Restore starting ecosystem</button>
+					</div>
+					<p id='experiment-status' role='status'>Capture a starting ecosystem, adjust the conditions, then run the comparison.</p>
+					<div id='experiment-results'></div>
 				</div>
 				<div id='stats' class='tab'>
 					<div class='left-half'>
