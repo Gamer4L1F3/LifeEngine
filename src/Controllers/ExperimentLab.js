@@ -9,8 +9,9 @@ class ExperimentLab {
         this.env = this.engine.env;
         this.baseline = null;
         this.active = false;
-        this.results = [];
-        this.trialIndex = 0;
+        this.results = [[], []];
+        this.conditionIndex = 0;
+        this.replicateIndex = 0;
         this.defineControls();
     }
 
@@ -66,12 +67,14 @@ class ExperimentLab {
             this.readCondition("experiment-a", "Condition A"),
             this.readCondition("experiment-b", "Condition B")
         ];
-        this.duration = Math.max(100, Math.floor(Number($("#experiment-duration").val()) || 5000));
+        this.duration = Math.max(100, Math.floor(Number($("#experiment-duration").val()) || 1000));
+        this.repeats = Math.max(1, Math.min(20, Math.floor(Number($("#experiment-repeats").val()) || 3)));
         const seedValue = Number($("#experiment-seed").val());
-        this.seed = Number.isFinite(seedValue) ? (Math.floor(seedValue) >>> 0) : 2026;
+        this.baseSeed = Number.isFinite(seedValue) ? (Math.floor(seedValue) >>> 0) : 2026;
         this.originalRandom = Math.random;
-        this.results = [];
-        this.trialIndex = 0;
+        this.results = [[], []];
+        this.conditionIndex = 0;
+        this.replicateIndex = 0;
         this.previousWorldRules = {
             auto_reset: WorldConfig.auto_reset,
             auto_pause: WorldConfig.auto_pause
@@ -82,7 +85,7 @@ class ExperimentLab {
         $("#experiment-run").prop("disabled", true);
         $("#experiment-cancel").prop("disabled", false);
         $("#experiment-results").empty();
-        this.runCondition(0);
+        this.runCondition(0, 0);
     }
 
     createRandom(seed) {
@@ -103,13 +106,15 @@ class ExperimentLab {
         }
     }
 
-    runCondition(index) {
-        this.trialIndex = index;
+    runCondition(conditionIndex, replicateIndex) {
+        this.conditionIndex = conditionIndex;
+        this.replicateIndex = replicateIndex;
         this.controlPanel.setPaused(true);
-        // Both trials restart the random stream from the same seed.
-        Math.random = this.createRandom(this.seed);
+        // Each A/B pair gets the same random seed; each repeat gets a new seed.
+        this.currentSeed = (this.baseSeed + replicateIndex) >>> 0;
+        Math.random = this.createRandom(this.currentSeed);
         this.env.loadRaw(JSON.parse(JSON.stringify(this.baseline)));
-        const { label, ...settings } = this.conditions[index];
+        const { label, ...settings } = this.conditions[conditionIndex];
         Hyperparams.loadJsonObj(Object.assign({}, this.baseline.controls, settings));
         this.controlPanel.updateHyperparamUIValues();
         this.controlPanel.stats_panel.reset();
@@ -117,8 +122,8 @@ class ExperimentLab {
         this.startTick = this.env.total_ticks;
         this.startPopulation = this.env.organisms.length;
         $("#experiment-status").text(
-            this.conditions[index].label + " running · 0% · " +
-            this.duration.toLocaleString() + " ticks"
+            this.conditions[conditionIndex].label + " · repeat " +
+            (replicateIndex + 1) + " of " + this.repeats + " · 0%"
         );
         this.controlPanel.setPaused(false);
     }
@@ -131,8 +136,9 @@ class ExperimentLab {
             this.completeCondition();
         } else if (elapsed % 25 === 0) {
             $("#experiment-status").text(
-                this.conditions[this.trialIndex].label + " running · " + progress +
-                "% · tick " + elapsed.toLocaleString() + " / " + this.duration.toLocaleString()
+                this.conditions[this.conditionIndex].label + " · repeat " +
+                (this.replicateIndex + 1) + " of " + this.repeats + " · " + progress +
+                "% · " + elapsed.toLocaleString() + " / " + this.duration.toLocaleString() + " ticks"
             );
         }
     }
@@ -153,12 +159,15 @@ class ExperimentLab {
 
     completeCondition() {
         this.controlPanel.setPaused(true);
-        this.results.push(this.collectResult());
-        if (this.trialIndex === 0) {
-            this.runCondition(1);
-            return;
+        this.results[this.conditionIndex].push(this.collectResult());
+
+        if (this.conditionIndex === 0) {
+            this.runCondition(1, this.replicateIndex);
+        } else if (this.replicateIndex + 1 < this.repeats) {
+            this.runCondition(0, this.replicateIndex + 1);
+        } else {
+            this.finishComparison();
         }
-        this.finishComparison();
     }
 
     finishComparison() {
@@ -167,7 +176,8 @@ class ExperimentLab {
         WorldConfig.auto_reset = this.previousWorldRules.auto_reset;
         WorldConfig.auto_pause = this.previousWorldRules.auto_pause;
         $("#experiment-status").text(
-            "Comparison complete · same starting world, duration, and random seed (" + this.seed + ")."
+            "Comparison complete · " + this.repeats + " paired repeats · seeds " +
+            this.baseSeed + "–" + ((this.baseSeed + this.repeats - 1) >>> 0) + "."
         );
         $("#experiment-run").prop("disabled", false);
         $("#experiment-cancel").prop("disabled", true);
@@ -196,21 +206,31 @@ class ExperimentLab {
         $("#experiment-status").text("Starting ecosystem restored.");
     }
 
+    summarize(values, key) {
+        const numbers = values.map(value => value[key]);
+        const mean = numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
+        const min = Math.min(...numbers);
+        const max = Math.max(...numbers);
+        const format = value => Number.isInteger(value) ? String(value) : value.toFixed(2);
+        return format(mean) + " (range " + format(min) + "–" + format(max) + ")";
+    }
+
     renderResults() {
         const a = this.results[0];
         const b = this.results[1];
-        if (!a || !b) return;
+        if (!a.length || !b.length) return;
         const rows = [
-            ["Final population", a.population, b.population],
-            ["Population change", a.populationChange, b.populationChange],
-            ["Surviving species", a.species, b.species],
-            ["Average cells / organism", a.averageCells.toFixed(2), b.averageCells.toFixed(2)],
-            ["Largest organism", a.largestOrganism + " cells", b.largestOrganism + " cells"],
-            ["Average mutation rate", a.mutationRate.toFixed(2), b.mutationRate.toFixed(2)]
+            ["Final population", "population"],
+            ["Population change", "populationChange"],
+            ["Surviving species", "species"],
+            ["Average cells / organism", "averageCells"],
+            ["Largest organism (cells)", "largestOrganism"],
+            ["Average mutation rate", "mutationRate"]
         ];
-        let html = "<table class='experiment-result-table'><thead><tr><th>Measure</th><th>Condition A</th><th>Condition B</th></tr></thead><tbody>";
+        let html = "<table class='experiment-result-table'><thead><tr><th>Measure</th><th>Condition A · mean (range)</th><th>Condition B · mean (range)</th></tr></thead><tbody>";
         for (const row of rows) {
-            html += "<tr><th>" + row[0] + "</th><td>" + row[1] + "</td><td>" + row[2] + "</td></tr>";
+            html += "<tr><th>" + row[0] + "</th><td>" + this.summarize(a, row[1]) +
+                "</td><td>" + this.summarize(b, row[1]) + "</td></tr>";
         }
         html += "</tbody></table>";
         $("#experiment-results").html(html);
